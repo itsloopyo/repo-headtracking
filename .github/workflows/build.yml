@@ -34,8 +34,14 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      # run-install: false - this workspace has zero conda dependencies (pixi is
+      # a task runner only; the .NET SDK comes from setup-dotnet above). The
+      # action's post-install `pixi list` errors on an empty environment in
+      # pixi 0.70+. `pixi run package` resolves the env lazily anyway.
       - name: Setup pixi
         uses: prefix-dev/setup-pixi@5185adfbffb4bd703da3010310260805d89ebb11 # v0.9.6
+        with:
+          run-install: false
 
       # Build + package through the SAME command a developer runs locally. Every
       # build dependency (BepInEx + Unity stubs) is produced by
