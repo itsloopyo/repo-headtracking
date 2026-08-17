@@ -34,7 +34,8 @@ namespace REPOHeadTracking.Core
 
             var processor = new TrackingProcessor
             {
-                SmoothingFactor = config.Smoothing.Value,
+                LocalSmoothing = config.LocalSmoothing.Value,
+                RemoteSmoothing = config.RemoteSmoothing.Value,
                 Sensitivity = new SensitivitySettings(
                     config.YawSensitivity.Value,
                     config.PitchSensitivity.Value,
@@ -47,7 +48,7 @@ namespace REPOHeadTracking.Core
 
             var positionProcessor = new PositionProcessor
             {
-                Settings = new PositionSettings(
+                Settings = PositionSettings.Symmetric(
                     config.PositionSensitivityX.Value,
                     config.PositionSensitivityY.Value,
                     config.PositionSensitivityZ.Value,
@@ -55,7 +56,8 @@ namespace REPOHeadTracking.Core
                     config.PositionLimitY.Value,
                     config.PositionLimitZ.Value,
                     config.PositionLimitZBack.Value,
-                    config.PositionSmoothing.Value,
+                    localSmoothing: config.LocalSmoothing.Value,
+                    remoteSmoothing: config.RemoteSmoothing.Value,
                     invertX: true, invertY: false, invertZ: true),
                 TrackerPivotForward = config.TrackerPivotForward.Value
             };

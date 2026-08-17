@@ -136,8 +136,12 @@ InvertPitch = true
 InvertRoll = false
 
 [Smoothing]
-## 0 = most responsive, 1 = heavy smoothing. Raise this if tracking looks jittery.
-Smoothing = 0
+## 0 = most responsive, 1 = heavy smoothing. Both cover rotation and position.
+## The mod picks one per connection from the packet source address.
+## Tracker running on this machine (loopback):
+LocalSmoothing = 0
+## Tracker on a remote network device, e.g. a phone over WiFi:
+RemoteSmoothing = 0.15
 
 [Position]
 ## Positional tracking (lean in, out, and side to side)
@@ -152,8 +156,6 @@ PositionLimitX = 0.3
 PositionLimitY = 0.2
 PositionLimitZ = 0.4
 PositionLimitZBack = 0.1
-## 0 = instant, 1 = very slow
-PositionSmoothing = 0.15
 ## Distance in meters from your neck pivot to the point the tracker reports.
 ## Cancels the sideways arc your head traces when you turn it.
 TrackerPivotForward = 0.08
@@ -180,7 +182,7 @@ it at runtime; the config value is what the mod starts with next launch.
 
 **Jittery or unstable tracking**
 
-- Raise `Smoothing` toward `0.3` in the config, and `PositionSmoothing` if the lean is what shakes.
+- Raise `RemoteSmoothing` toward `0.3` if your tracker is a phone or other network device, or `LocalSmoothing` if it runs on this PC. Both cover rotation and lean.
 - For webcam tracking, add light on your face and avoid a bright window behind you.
 - On WiFi phone tracking, move closer to the router or switch to 5 GHz.
 
