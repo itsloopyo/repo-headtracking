@@ -29,6 +29,22 @@ Copyright (c) 2017 Andreas Pardeike, (c) 2020 BepInEx contributors
 
 ---
 
+## Mono.Cecil
+
+- **License:** MIT
+- **Upstream:** https://github.com/jbevain/cecil
+- **Usage:** IL reading/writing used by BepInEx's preloader.
+- **Bundled:** yes, inside the vendored BepInEx zip; bundled in the release ZIP
+  and used as the install-time source.
+
+## MonoMod
+
+- **License:** MIT
+- **Upstream:** https://github.com/MonoMod/MonoMod
+- **Usage:** runtime detouring used by BepInEx / HarmonyX.
+- **Bundled:** yes, inside the vendored BepInEx zip; bundled in the release ZIP
+  and used as the install-time source.
+
 ## OpenTrack
 
 - **Version:** n/a (wire protocol only)
