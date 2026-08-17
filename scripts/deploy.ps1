@@ -23,6 +23,7 @@ $projectRoot = Split-Path -Parent $scriptDir
 Import-Module (Join-Path $projectRoot "cameraunlock-core\powershell\DevDeploy.psm1") -Force
 Import-Module (Join-Path $projectRoot "cameraunlock-core\powershell\ModDeployment.psm1") -Force
 $buildOutput = Join-Path $projectRoot "src\REPOHeadTracking\bin\$Configuration\net472"
+$vendorZip = Join-Path $projectRoot "vendor\bepinex\BepInEx_win_x64.zip"
 $result = Invoke-DevDeployBepInEx `
     -GameId 'repo' `
     -GameDisplayName 'R.E.P.O.' `
@@ -30,7 +31,8 @@ $result = Invoke-DevDeployBepInEx `
     -ModDllName 'REPOHeadTracking.dll' `
     -ExtraDlls @('CameraUnlock.Core.dll', 'CameraUnlock.Core.Unity.dll') `
     -GivenPath $GivenPath `
-    -EnsureLoader
+    -EnsureLoader `
+    -VendorZip $vendorZip
 
 Write-DeploymentSuccess `
     -ModName "Head Tracking mod" `
