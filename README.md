@@ -2,7 +2,7 @@
 
 6DOF head tracking for R.E.P.O. that lets you look around independently of where you aim, using a webcam, phone, or VR headset instead of a VR setup.
 
-<!-- ![Mod GIF](https://raw.githubusercontent.com/itsloopyo/repo-headtracking/main/assets/readme-clip.gif) -->
+![Mod GIF](https://raw.githubusercontent.com/itsloopyo/repo-headtracking/main/assets/readme-clip.gif)
 
 ## Features
 
