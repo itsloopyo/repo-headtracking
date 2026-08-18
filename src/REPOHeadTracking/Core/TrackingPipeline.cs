@@ -58,7 +58,7 @@ namespace REPOHeadTracking.Core
                     config.PositionLimitZBack.Value,
                     localSmoothing: config.LocalSmoothing.Value,
                     remoteSmoothing: config.RemoteSmoothing.Value,
-                    invertX: true, invertY: false, invertZ: true),
+                    invertX: true, invertY: false, invertZ: false),
                 TrackerPivotForward = config.TrackerPivotForward.Value
             };
 
