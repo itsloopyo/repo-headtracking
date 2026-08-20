@@ -16,7 +16,6 @@ namespace REPOHeadTracking.Config
 
         // Keybindings
         public ConfigEntry<KeyCode> ToggleKey { get; private set; }
-        public ConfigEntry<KeyCode> RecenterKey { get; private set; }
         public ConfigEntry<KeyCode> CycleTrackingModeKey { get; private set; }
         public ConfigEntry<KeyCode> YawModeKey { get; private set; }
 
@@ -71,10 +70,6 @@ namespace REPOHeadTracking.Config
             ToggleKey = config.Bind(
                 "Keybindings", "ToggleKey", KeyCode.End,
                 "Key to toggle head tracking on/off");
-
-            RecenterKey = config.Bind(
-                "Keybindings", "RecenterKey", KeyCode.Home,
-                "Key to recenter head tracking");
 
             CycleTrackingModeKey = config.Bind(
                 "Keybindings", "CycleTrackingModeKey", KeyCode.PageUp,

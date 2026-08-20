@@ -68,13 +68,6 @@ namespace REPOHeadTracking.Core
 
             _cameraController.WorldSpaceYaw = _config.WorldSpaceYaw.Value;
 
-            // ProcessFrame consumes the tracker app's recenter request itself and has
-            // already recentered by the time this fires, so this only reports it.
-            // Polling the receiver here as well would race it: the request is claimed
-            // with a single Interlocked.Exchange, so exactly one of the two consumers
-            // sees a given CENTER press and the feedback would come and go at random.
-            _cameraController.OnRemoteRecenter = ReportRecentered;
-
             // Seed the mode from config so the first cycle press transitions away
             // from the current mode rather than back to it.
             SetTrackingMode(_config.PositionEnabled.Value
@@ -94,7 +87,6 @@ namespace REPOHeadTracking.Core
         {
             _inputHandler = new InputHandler(_config);
             _inputHandler.OnTogglePressed += HandleToggle;
-            _inputHandler.OnRecenterPressed += HandleRecenter;
             _inputHandler.OnCycleTrackingModePressed += HandleCycleTrackingMode;
             _inputHandler.OnToggleYawModePressed += HandleToggleYawMode;
         }
@@ -195,7 +187,6 @@ namespace REPOHeadTracking.Core
             if (_inputHandler != null)
             {
                 _inputHandler.OnTogglePressed -= HandleToggle;
-                _inputHandler.OnRecenterPressed -= HandleRecenter;
                 _inputHandler.OnCycleTrackingModePressed -= HandleCycleTrackingMode;
                 _inputHandler.OnToggleYawModePressed -= HandleToggleYawMode;
             }
@@ -218,18 +209,17 @@ namespace REPOHeadTracking.Core
             if (isReceiving == _wasReceiving)
                 return;
 
+            // The log line is deliberately outside the notification gate: it is the
+            // only evidence in the log that tracker packets ever arrived, and a bug
+            // report must not depend on a cosmetic on-screen setting.
+            Log.LogInfo(isReceiving ? "OpenTrack connection established" : "OpenTrack connection lost");
+
             if (_config.ShowConnectionNotifications.Value)
             {
                 if (isReceiving)
-                {
                     _notificationUI.ShowConnectionEstablished();
-                    Log.LogInfo("OpenTrack connection established");
-                }
                 else
-                {
                     _notificationUI.ShowConnectionLost();
-                    Log.LogInfo("OpenTrack connection lost");
-                }
             }
             _wasReceiving = isReceiving;
         }
@@ -249,18 +239,6 @@ namespace REPOHeadTracking.Core
                 _notificationUI.ShowTrackingDisabled();
                 Log.LogInfo("Head tracking disabled");
             }
-        }
-
-        private void HandleRecenter()
-        {
-            _cameraController.Recenter();
-            ReportRecentered();
-        }
-
-        private void ReportRecentered()
-        {
-            _notificationUI.ShowRecentered();
-            Log.LogInfo("Head tracking recentered");
         }
 
         private void HandleCycleTrackingMode()

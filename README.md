@@ -86,10 +86,13 @@ for keyboards with no navigation cluster.
 
 | Action              | Nav-cluster | Chord          |
 |---------------------|-------------|----------------|
-| Recenter            | `Home`      | `Ctrl+Shift+T` |
 | Toggle tracking     | `End`       | `Ctrl+Shift+Y` |
 | Cycle tracking mode | `Page Up`   | `Ctrl+Shift+G` |
 | Toggle yaw mode     | `Page Down` | `Ctrl+Shift+H` |
+
+There is no recentre key. Your tracker app owns the centre: use its own
+control (opentrack's Center bind, the CENTER button in Headcam, SteamVR's
+reset) and the mod applies whatever pose it receives.
 
 Cycling the tracking mode steps through: normal head tracking, then rotation
 only, then position only, then back to normal.
@@ -117,7 +120,6 @@ ShowConnectionNotifications = true
 
 [Keybindings]
 ToggleKey = End
-RecenterKey = Home
 CycleTrackingModeKey = PageUp
 YawModeKey = PageDown
 
@@ -188,7 +190,9 @@ it at runtime; the config value is what the mod starts with next launch.
 
 **View drifts off-center, or rotates the wrong way**
 
-- Look straight ahead and press `Home` (or `Ctrl+Shift+T`) to recenter.
+- Centre it in your tracker app: opentrack's Center bind, the CENTER button in
+  Headcam, SteamVR's reset. The mod keeps no centre of its own and applies the
+  pose the tracker sends.
 - If an axis moves the opposite way to your head, flip the matching `InvertYaw` / `InvertPitch` / `InvertRoll` value in the config.
 - If yaw feels wrong only when looking steeply up or down, press `Page Down` to switch between horizon-locked and camera-local yaw.
 

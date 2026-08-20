@@ -30,7 +30,7 @@ set "FRAMEWORK_TYPE=BepInEx"
 set "BEPINEX_ARCH=x64"
 set "BEPINEX_VENDOR_ZIP_NAME=BepInEx_win_x64.zip"
 set "BEPINEX_SUBFOLDER="
-set "MOD_CONTROLS=Recenter: Home or Ctrl+Shift+T  ^|  Toggle tracking: End or Ctrl+Shift+Y  ^|  Cycle tracking mode: Page Up or Ctrl+Shift+G  ^|  Yaw mode: Page Down or Ctrl+Shift+H"
+set "MOD_CONTROLS=Toggle tracking: End or Ctrl+Shift+Y  ^|  Cycle tracking mode: Page Up or Ctrl+Shift+G  ^|  Yaw mode: Page Down or Ctrl+Shift+H"
 :: --- END CONFIG BLOCK ---
 
 call :detect_yes_flag %*

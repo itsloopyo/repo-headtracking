@@ -10,7 +10,6 @@ namespace REPOHeadTracking.Core
         private readonly ConfigManager _config;
 
         public event Action OnTogglePressed;
-        public event Action OnRecenterPressed;
         public event Action OnCycleTrackingModePressed;
         public event Action OnToggleYawModePressed;
 
@@ -26,7 +25,6 @@ namespace REPOHeadTracking.Core
         /// </summary>
         public string HotkeySummary =>
             $"[{_config.ToggleKey.Value}/Ctrl+Shift+{ChordHotkeys.ToggleLetter}] Toggle, " +
-            $"[{_config.RecenterKey.Value}/Ctrl+Shift+{ChordHotkeys.RecenterLetter}] Recenter, " +
             $"[{_config.CycleTrackingModeKey.Value}/Ctrl+Shift+{ChordHotkeys.PositionLetter}] Cycle Mode, " +
             $"[{_config.YawModeKey.Value}/Ctrl+Shift+{ChordHotkeys.FourthToggleLetter}] Yaw";
 
@@ -37,7 +35,6 @@ namespace REPOHeadTracking.Core
                 return;
 
             Dispatch(_config.ToggleKey.Value, ChordHotkeys.ToggleLetter, OnTogglePressed);
-            Dispatch(_config.RecenterKey.Value, ChordHotkeys.RecenterLetter, OnRecenterPressed);
             Dispatch(_config.CycleTrackingModeKey.Value, ChordHotkeys.PositionLetter, OnCycleTrackingModePressed);
             Dispatch(_config.YawModeKey.Value, ChordHotkeys.FourthToggleLetter, OnToggleYawModePressed);
         }
