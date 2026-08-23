@@ -220,7 +220,12 @@ pixi run package    # produce the release ZIPs
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+This mod's own code is MIT licensed - see [LICENSE](LICENSE) for details.
+
+The clip at the top of this page is R.E.P.O. gameplay footage and is not covered
+by that licence; it remains the property of its rights holders and ships in
+neither release ZIP. Bundled third-party components keep their own licences.
+Both are set out in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 ## Credits
 
