@@ -8,7 +8,7 @@
 
 - **Decoupled look and aim** - head tracking moves the camera; aim stays on your mouse/controller
 - **6DOF positional tracking** - lean and peek with head position
-- **Flashlight follows your head** - the light points where you look, not where your body aims
+- **Flashlight follows your head** - the light goes where you look, not where your body aims, and leads your head a little so it lands on what your eyes are on rather than on the centre of the screen
 
 ## Requirements
 

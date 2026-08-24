@@ -15,6 +15,14 @@ namespace REPOHeadTracking.Camera
     /// </summary>
     internal sealed class FlashlightRenderHook
     {
+        /// <summary>
+        /// How far the light turns relative to the view. A player who turns their head
+        /// keeps their eyes on what they turned towards, so their gaze sits past the
+        /// centre of the screen; matching the light to the view alone leaves it short of
+        /// what they are actually looking at.
+        /// </summary>
+        private const float HeadRotationScale = 1.5f;
+
         private readonly ViewMatrixTrackingController _controller;
         private readonly Func<bool> _isGameplayActive;
         private readonly FlashlightTracking _flashlight = new FlashlightTracking();
@@ -70,7 +78,8 @@ namespace REPOHeadTracking.Camera
             var up = new Vector3(view.m10, view.m11, view.m12);
 
             Quaternion tracked = Quaternion.LookRotation(forward, up);
-            return tracked * Quaternion.Inverse(cam.transform.rotation);
+            Quaternion delta = tracked * Quaternion.Inverse(cam.transform.rotation);
+            return Quaternion.SlerpUnclamped(Quaternion.identity, delta, HeadRotationScale);
         }
     }
 }

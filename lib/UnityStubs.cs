@@ -161,6 +161,7 @@ namespace UnityEngine {
         public static Quaternion LookRotation(Vector3 forward) => default;
         public static Quaternion LookRotation(Vector3 forward, Vector3 upwards) => default;
         public static Quaternion Slerp(Quaternion a, Quaternion b, float t) => default;
+        public static Quaternion SlerpUnclamped(Quaternion a, Quaternion b, float t) => default;
         public static Quaternion Lerp(Quaternion a, Quaternion b, float t) => default;
         public static Quaternion Inverse(Quaternion rotation) => default;
         public static float Angle(Quaternion a, Quaternion b) => 0;
