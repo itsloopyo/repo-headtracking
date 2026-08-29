@@ -1,8 +1,8 @@
 # R.E.P.O. Head Tracking
 
-6DOF head tracking for R.E.P.O. that lets you look around independently of where you aim, using a webcam, phone, or VR headset instead of a VR setup.
+![R.E.P.O. running with this mod](https://raw.githubusercontent.com/itsloopyo/repo-headtracking/main/assets/readme-clip.gif)
 
-![Mod GIF](https://raw.githubusercontent.com/itsloopyo/repo-headtracking/main/assets/readme-clip.gif)
+An unofficial head tracking mod for R.E.P.O. that moves the view with your head while your mouse or controller keeps aiming, driven by a webcam, phone, or any OpenTrack compatible tracker, with no VR headset required.
 
 ## Features
 
