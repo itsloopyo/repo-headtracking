@@ -19,7 +19,7 @@ under "R.E.P.O. footage and screenshots" below.
 | HarmonyX (and Harmony, which it forks) | 2.9.0 | MIT | Inside the vendored BepInEx archive |
 | MonoMod | 22.01.29.01 | MIT | Inside the vendored BepInEx archive |
 | Mono.Cecil | 0.10.4 | MIT | Inside the vendored BepInEx archive |
-| cameraunlock-core | `b107dc64b6bfe43b25d9c2bf867a6d31ce6b07e0` | MIT | Compiled into `REPOHeadTracking.dll` |
+| cameraunlock-core | `67a82e334bcf32979d17965eab4b0f37a48a6ad0` | MIT | Compiled into `REPOHeadTracking.dll` |
 | OpenTrack | n/a | ISC | Not bundled; UDP protocol interoperability only |
 
 Every version above is read from the shipped binary or the vendored archive, not
@@ -534,7 +534,7 @@ Exemptions / alternate licenses are available for negotiation.
 Git submodule at `cameraunlock-core/`, compiled into `REPOHeadTracking.dll`. Our own code,
 MIT licensed, reproduced here so the notices are complete.
 
-- Pinned commit: `b107dc64b6bfe43b25d9c2bf867a6d31ce6b07e0`
+- Pinned commit: `67a82e334bcf32979d17965eab4b0f37a48a6ad0`
 
 ```
 MIT License
