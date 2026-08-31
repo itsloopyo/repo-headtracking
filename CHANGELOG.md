@@ -5,6 +5,9 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- `General / FlashlightMultiplier` sets how far the flashlight turns relative to your
+  head. It was fixed at 1.5 with no way to change it. `1.0` matches the view, `0`
+  leaves the beam on the aim
 - Initial 6DOF head tracking implementation for R.E.P.O.
 
 ### Fixed

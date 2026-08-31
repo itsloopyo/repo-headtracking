@@ -1,6 +1,7 @@
 using System;
 using CameraUnlock.Core.Protocol;
 using CameraUnlock.Core.Tracking;
+using CameraUnlock.Core.Unity.Effects;
 using CameraUnlock.Core.Unity.Tracking;
 using CameraUnlock.Core.Unity.UI;
 using REPOHeadTracking.Camera;
@@ -35,7 +36,7 @@ namespace REPOHeadTracking.Core
         private InputHandler _inputHandler;
         private NotificationUI _notificationUI;
         private AnchoredOffsetCompensator _crosshair;
-        private FlashlightRenderHook _flashlightHook;
+        private HeadFollowLightRenderHook _flashlightHook;
         private bool _wasReceiving;
         private TrackingMode _trackingMode;
         private bool _initialized;
@@ -105,8 +106,17 @@ namespace REPOHeadTracking.Core
             // Attached after the controller's own render hook (BuildTracking runs first),
             // so by the time it fires the camera carries the tracked matrix this frame's
             // world is rendered with.
-            _flashlightHook = new FlashlightRenderHook(
-                _cameraController, () => _gameStateDetector.IsGameplayActive);
+            _flashlightHook = new HeadFollowLightRenderHook(
+                _cameraController, GameFlashlight.Resolve,
+                () => _gameStateDetector.IsGameplayActive)
+            {
+                Multiplier = _config.FlashlightMultiplier.Value,
+            };
+            // The entry is a slider in ConfigurationManager and is editable in the file
+            // while the game runs. Read once, it would present as tunable and do nothing
+            // until a restart.
+            _config.FlashlightMultiplier.SettingChanged += (sender, args) =>
+                _flashlightHook.Multiplier = _config.FlashlightMultiplier.Value;
             _flashlightHook.Attach();
         }
 

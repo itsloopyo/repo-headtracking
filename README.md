@@ -145,6 +145,9 @@ ShowStartupNotification = true
 WorldSpaceYaw = true
 ## Point the flashlight where you are looking rather than where you are aiming
 FlashlightFollowsHead = true
+## How far the flashlight turns relative to your head. 1.0 matches the view,
+## 0 leaves the beam on your aim
+FlashlightMultiplier = 1.5
 
 [UI]
 ## Notify when the tracker connection is lost or restored

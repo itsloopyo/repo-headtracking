@@ -1,4 +1,5 @@
 using BepInEx.Configuration;
+using CameraUnlock.Core.Effects;
 using UnityEngine;
 
 namespace REPOHeadTracking.Config
@@ -10,6 +11,7 @@ namespace REPOHeadTracking.Config
         public ConfigEntry<bool> ShowStartupNotification { get; private set; }
         public ConfigEntry<bool> WorldSpaceYaw { get; private set; }
         public ConfigEntry<bool> FlashlightFollowsHead { get; private set; }
+        public ConfigEntry<float> FlashlightMultiplier { get; private set; }
 
         // UI
         public ConfigEntry<bool> ShowConnectionNotifications { get; private set; }
@@ -62,6 +64,15 @@ namespace REPOHeadTracking.Config
             FlashlightFollowsHead = config.Bind(
                 "General", "FlashlightFollowsHead", true,
                 "Point the flashlight where you are looking rather than where you are aiming");
+
+            // The default leads the view rather than matching it: you keep your eyes on
+            // what you turned towards, so your gaze sits past the centre of the screen and
+            // a beam matched to the view lands short of it. 1.0 matches the view.
+            FlashlightMultiplier = config.Bind(
+                "General", "FlashlightMultiplier", HeadFollowLightSettings.DefaultMultiplier,
+                new ConfigDescription(
+                    "How far the flashlight turns relative to your head",
+                    new AcceptableValueRange<float>(0f, HeadFollowLightSettings.MaxMultiplier)));
 
             ShowConnectionNotifications = config.Bind(
                 "UI", "ShowConnectionNotifications", true,
