@@ -8,6 +8,7 @@ An unofficial head tracking mod for R.E.P.O. that moves the view with your head 
 
 - **Decoupled look and aim** - head tracking moves the camera; aim stays on your mouse/controller
 - **6DOF positional tracking** - lean and peek with head position
+- **Works with any OpenTrack compatible tracker** - free options available for PC, iOS and Android
 - **Flashlight follows your head** - the light goes where you look, not where your body aims, and leads your head a little so it lands on what your eyes are on rather than on the centre of the screen
 
 ## Requirements
@@ -17,6 +18,13 @@ An unofficial head tracking mod for R.E.P.O. that moves the view with your head 
 - Windows 10 or 11, 64-bit.
 
 ## Installation
+
+### Lopari
+
+Download [Lopari](https://lopari.app), choose **R.E.P.O.**, and click
+**Play with head tracking**.
+
+### Standalone Installer
 
 1. Download `REPOHeadTracking-v<version>-installer.zip` from the [Releases page](https://github.com/itsloopyo/repo-headtracking/releases).
 2. Extract it anywhere.
