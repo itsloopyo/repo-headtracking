@@ -28,6 +28,12 @@ set "BEPINEX_SUBFOLDER="
 set "PLUGIN_SUBFOLDER="
 :: Post-install help text. `&echo ` starts each further line.
 set "MOD_CONTROLS=Toggle tracking: End or Ctrl+Shift+Y  ^|  Cycle tracking mode: Page Up or Ctrl+Shift+G  ^|  Yaw mode: Page Down or Ctrl+Shift+H"
+:: Not used by this mod. Set blank so a value another mod's wrapper left in
+:: the same console does not reach the body.
+set "IL2CPP_VENDOR_DIR_NAME="
+set "IL2CPP_VENDOR_ZIP_NAME="
+set "IL2CPP_PLUGIN_DIR_NAME="
+set "IL2CPP_MOD_DLLS="
 :: --- END CONFIG BLOCK ---
 
 :: Pin delayed expansion off before `%*` is expanded on the `call` below.
