@@ -1,0 +1,22 @@
+# What the differential test compares, and where each file came from.
+# Columns: role, source (commit:path, a release asset, or the path in this repo), sha256 of the bytes.
+# The one published build is the rolling dev pre-release, built from 44a2cc5. There is no v* release and no
+# predecessor repo. Config/ConfigManager.cs is the reader that build read the .cfg with; the oracle is that
+# file byte for byte. The frozen reader in src/REPOHeadTracking/Legacy is ConfigManager.cs at 709b02d,
+# restructured to fill LegacyConfig and write nothing, with every core constant it read written as its value.
+# It differs from the dev build's reader by e353d45, which added General/FlashlightMultiplier.
+published reader	44a2cc5:src/REPOHeadTracking/Config/ConfigManager.cs	9dda0ea0118a505d99c92379e55099ca3e7e8b8ac7e6ea1b4fb94e3780e16aa3
+frozen from	709b02d:src/REPOHeadTracking/Config/ConfigManager.cs	e54f6f799a450b97cda48371f7258f1066b8c16a381fecac74481eae3ad8ff96
+oracle copy	tests/config_differential/Oracle/ConfigManager.cs	9dda0ea0118a505d99c92379e55099ca3e7e8b8ac7e6ea1b4fb94e3780e16aa3
+frozen reader	src/REPOHeadTracking/Legacy/LegacyConfig.cs	32abf434100c485ca1509a16eb14f1f92e2e74261baf72b82e8c7bfee5ae21fa
+frozen reader	src/REPOHeadTracking/Legacy/LegacyConfigReader.cs	71091d6e2cb21ba66ce86c29b8d32f10b47e48722e24f13769cadd7c9b74d15e
+BepInEx 5	vendor/bepinex/BepInEx_win_x64.zip	82f9878551030f54657792c0740d9d51a09500eeae1fba21106b0c441e6732c4
+# BepInEx 5.4.23.5, unchanged since the dev build. The test and the first-run harness ran its BepInEx/core/BepInEx.dll
+# (sha256 8255b28902886085c578b9e427d3073c97002db85176d2090cdeda90ef14ce70), which the game loads.
+# No published build shipped the plugin .cfg, in its ZIP or as a launcher-manifest.json seed, so the input is
+# what the build writes at its first start: the .cfg the dev pre-release's own plugins/REPOHeadTracking.dll,
+# taken from its installer ZIP (the ZIP's SHA-256 matches the digest GitHub reports for the asset), writes when
+# its ConfigManager.Initialize runs on a ConfigFile at a path with no file and the plugin's BepInPlugin metadata
+# (v0.0.0), as BaseUnityPlugin builds it, on .NET Framework 4.8 with the Unity reference stubs in lib/.
+input source	release dev REPOHeadTracking-dev-installer.zip 3b8e58efba2d03a298158ca2a96bf0fc6bd13368479609867ef5b97b71548c00 plugins/REPOHeadTracking.dll 4e6dc6241a4ce5d3e0f4a63968e619ef6b26548291e83acca2a257d6d02fb225	-
+input	tests/config_differential/data/first-run/dev.cfg	1815eec72f6cec01435a0b4d15b49de7e6187d961535705bef54de5f09b2b82b
