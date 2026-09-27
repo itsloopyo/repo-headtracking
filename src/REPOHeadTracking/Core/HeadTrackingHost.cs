@@ -22,6 +22,7 @@ namespace REPOHeadTracking.Core
         private const float StartupNotificationSeconds = 4f;
         private const float StatusNotificationSeconds = 1.5f;
         private const float PortBusyNotificationSeconds = 8f;
+        private const float ConfigNotificationSeconds = 8f;
 
         private static readonly int TrackingModeCount = Enum.GetValues(typeof(TrackingMode)).Length;
 
@@ -29,7 +30,7 @@ namespace REPOHeadTracking.Core
 
         public bool TrackingEnabled { get; private set; }
 
-        private ConfigManager _config;
+        private REPOConfig _config;
         private OpenTrackReceiver _receiver;
         private ViewMatrixTrackingController _cameraController;
         private GameStateDetector _gameStateDetector;
@@ -54,8 +55,8 @@ namespace REPOHeadTracking.Core
             BuildUI();
             BuildFlashlight();
 
-            bool listening = _receiver.Start(_config.UDPPort.Value);
-            TrackingEnabled = _config.EnabledOnStartup.Value;
+            bool listening = _receiver.Start(_config.UdpPort);
+            TrackingEnabled = _config.EnableOnStartup;
             _initialized = true;
 
             AnnounceStartup(listening);
@@ -67,13 +68,12 @@ namespace REPOHeadTracking.Core
             _receiver = pipeline.Receiver;
             _cameraController = pipeline.Controller;
 
-            _cameraController.WorldSpaceYaw = _config.WorldSpaceYaw.Value;
+            _cameraController.WorldSpaceYaw = _config.WorldSpaceYaw;
 
             // Seed the mode from config so the first cycle press transitions away
-            // from the current mode rather than back to it.
-            SetTrackingMode(_config.PositionEnabled.Value
-                ? TrackingMode.RotationAndPosition
-                : TrackingMode.RotationOnly);
+            // from the current mode rather than back to it. The table reads a pair that
+            // names no mode (both off) as its defaults, so the pair always decodes.
+            SetTrackingMode(TrackingModeChannels.Decode(_config.RotationEnabled, _config.PositionEnabled).Value);
             _cameraController.Enable();
         }
 
@@ -100,7 +100,7 @@ namespace REPOHeadTracking.Core
 
         private void BuildFlashlight()
         {
-            if (!_config.FlashlightFollowsHead.Value)
+            if (!_config.Light.FollowsHead)
                 return;
 
             // Attached after the controller's own render hook (BuildTracking runs first),
@@ -110,13 +110,8 @@ namespace REPOHeadTracking.Core
                 _cameraController, GameFlashlight.Resolve,
                 () => _gameStateDetector.IsGameplayActive)
             {
-                Multiplier = _config.FlashlightMultiplier.Value,
+                Multiplier = _config.Light.Multiplier,
             };
-            // The entry is a slider in ConfigurationManager and is editable in the file
-            // while the game runs. Read once, it would present as tunable and do nothing
-            // until a restart.
-            _config.FlashlightMultiplier.SettingChanged += (sender, args) =>
-                _flashlightHook.Multiplier = _config.FlashlightMultiplier.Value;
             _flashlightHook.Attach();
         }
 
@@ -124,19 +119,19 @@ namespace REPOHeadTracking.Core
         {
             Log.LogInfo($"Head tracking runtime started. Tracking {(TrackingEnabled ? "enabled" : "disabled")}");
 
-            int port = _config.UDPPort.Value;
+            int port = _config.UdpPort;
 
             if (listening)
             {
                 Log.LogInfo($"Listening on UDP port {port}");
 
-                if (_config.ShowStartupNotification.Value)
+                if (_config.ShowStartupNotification)
                 {
                     string status = TrackingEnabled ? "Head Tracking: ON" : "Head Tracking: OFF";
                     _notificationUI.ShowNotification($"{status}\n{_inputHandler.HotkeySummary}", StartupNotificationSeconds);
                 }
             }
-            else if (_config.ShowConnectionNotifications.Value)
+            else if (_config.ShowConnectionNotifications)
             {
                 // The receiver logs the failed bind and keeps polling the port, so this
                 // resolves itself the moment the other app lets go - the player just
@@ -146,6 +141,14 @@ namespace REPOHeadTracking.Core
                     NotificationType.Warning,
                     PortBusyNotificationSeconds);
             }
+
+            // Shown once: R.E.P.O. can take this host out on a scene load, and its
+            // replacement announces the startup again.
+            foreach (string message in REPOHeadTrackingPlugin.ConfigMessages)
+            {
+                _notificationUI.ShowNotification(message, NotificationType.Warning, ConfigNotificationSeconds);
+            }
+            REPOHeadTrackingPlugin.ConfigMessages.Clear();
         }
 
         private void Update()
@@ -224,7 +227,7 @@ namespace REPOHeadTracking.Core
             // report must not depend on a cosmetic on-screen setting.
             Log.LogInfo(isReceiving ? "OpenTrack connection established" : "OpenTrack connection lost");
 
-            if (_config.ShowConnectionNotifications.Value)
+            if (_config.ShowConnectionNotifications)
             {
                 if (isReceiving)
                     _notificationUI.ShowConnectionEstablished();
@@ -234,6 +237,7 @@ namespace REPOHeadTracking.Core
             _wasReceiving = isReceiving;
         }
 
+        /// <summary>Turns head tracking on or off for this session. Never saved.</summary>
         private void HandleToggle()
         {
             TrackingEnabled = !TrackingEnabled;
@@ -258,13 +262,23 @@ namespace REPOHeadTracking.Core
             string label = "Tracking: " + _trackingMode.Description();
             _notificationUI.ShowNotification(label, NotificationType.Info, StatusNotificationSeconds);
             Log.LogInfo(label);
+
+            bool rotation = _cameraController.RotationEnabled;
+            bool position = _cameraController.PositionEnabled;
+            REPOHeadTrackingPlugin.SaveConfig(c =>
+            {
+                c.RotationEnabled = rotation;
+                c.PositionEnabled = position;
+            });
         }
 
         private void SetTrackingMode(TrackingMode mode)
         {
             _trackingMode = mode;
-            _cameraController.RotationEnabled = mode != TrackingMode.PositionOnly;
-            _cameraController.PositionEnabled = mode != TrackingMode.RotationOnly;
+            bool rotation, position;
+            TrackingModeChannels.Encode(mode, out rotation, out position);
+            _cameraController.RotationEnabled = rotation;
+            _cameraController.PositionEnabled = position;
         }
 
         private void HandleToggleYawMode()
@@ -275,6 +289,9 @@ namespace REPOHeadTracking.Core
                 NotificationType.Info,
                 StatusNotificationSeconds);
             Log.LogInfo($"Yaw mode: {(_cameraController.WorldSpaceYaw ? "world-locked" : "camera-local")}");
+
+            bool worldSpaceYaw = _cameraController.WorldSpaceYaw;
+            REPOHeadTrackingPlugin.SaveConfig(c => c.WorldSpaceYaw = worldSpaceYaw);
         }
 
         private void OnGameStateChanged(GameState newState)

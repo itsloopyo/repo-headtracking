@@ -14,6 +14,15 @@ namespace REPOHeadTracking.Core
     /// </summary>
     internal sealed class TrackingPipeline
     {
+        // R.E.P.O.'s camera pitches the opposite way to the tracker's convention. Shipped as
+        // InvertPitch = true before the canonical config and folded into the code, so the view
+        // moves as it did at that default.
+        private static readonly SensitivitySettings RotationAxes = new SensitivitySettings(1f, 1f, 1f, invertPitch: true);
+
+        // The neck pivot the mod shipped. The tracker is authoritative over the rest of the pose,
+        // but this distance is the mod's own, so it stays in code rather than in the config.
+        private const float TrackerPivotForward = 0.08f;
+
         public OpenTrackReceiver Receiver { get; }
         public ViewMatrixTrackingController Controller { get; }
 
@@ -28,38 +37,27 @@ namespace REPOHeadTracking.Core
         /// (yaw mode, tracking mode) are the caller's to seed, and neither the receiver
         /// nor the controller is started here - the caller decides when tracking goes live.
         /// </summary>
-        public static TrackingPipeline Build(ConfigManager config, Action<string> log)
+        public static TrackingPipeline Build(REPOConfig config, Action<string> log)
         {
             var receiver = new OpenTrackReceiver { Log = log };
 
             var processor = new TrackingProcessor
             {
-                LocalSmoothing = config.LocalSmoothing.Value,
-                RemoteSmoothing = config.RemoteSmoothing.Value,
-                Sensitivity = new SensitivitySettings(
-                    config.YawSensitivity.Value,
-                    config.PitchSensitivity.Value,
-                    config.RollSensitivity.Value,
-                    invertYaw: config.InvertYaw.Value,
-                    invertPitch: config.InvertPitch.Value,
-                    invertRoll: config.InvertRoll.Value),
+                LocalSmoothing = config.LocalSmoothing,
+                RemoteSmoothing = config.RemoteSmoothing,
+                Sensitivity = RotationAxes,
                 Deadzone = DeadzoneSettings.None
             };
 
+            PositionSettings limits = config.Position;
             var positionProcessor = new PositionProcessor
             {
-                Settings = PositionSettings.Symmetric(
-                    config.PositionSensitivityX.Value,
-                    config.PositionSensitivityY.Value,
-                    config.PositionSensitivityZ.Value,
-                    config.PositionLimitX.Value,
-                    config.PositionLimitY.Value,
-                    config.PositionLimitZ.Value,
-                    config.PositionLimitZBack.Value,
-                    localSmoothing: config.LocalSmoothing.Value,
-                    remoteSmoothing: config.RemoteSmoothing.Value,
+                Settings = new PositionSettings(
+                    1f, 1f, 1f,
+                    limits.LimitX, limits.LimitY, limits.LimitYDown, limits.LimitZ, limits.LimitZBack,
+                    config.LocalSmoothing, config.RemoteSmoothing,
                     invertX: true, invertY: false, invertZ: false),
-                TrackerPivotForward = config.TrackerPivotForward.Value
+                TrackerPivotForward = TrackerPivotForward
             };
 
             var controller = new ViewMatrixTrackingController(
