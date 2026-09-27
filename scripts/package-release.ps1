@@ -53,19 +53,6 @@ if (-not (Test-Path $vendorZip)) {
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-function Add-ZipEntry {
-    param([string]$ZipPath, [string]$SourceFile, [string]$EntryName)
-
-    $zip = [System.IO.Compression.ZipFile]::Open($ZipPath, 'Update')
-    try {
-        $existing = $zip.GetEntry($EntryName)
-        if ($existing) { $existing.Delete() }
-        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $SourceFile, $EntryName) | Out-Null
-    } finally {
-        $zip.Dispose()
-    }
-}
-
 function Assert-ZipCarriesNotices {
     param([string]$ZipPath, [string[]]$EntryNames)
 
@@ -93,11 +80,7 @@ $result = & (Join-Path $projectDir "cameraunlock-core\scripts\package-bepinex-mo
 $version = [System.IO.Path]::GetFileNameWithoutExtension($result.GithubZip) -replace '^.*-v', '' -replace '-installer$', ''
 $releaseDir = Join-Path $projectDir 'release'
 
-# Injected here rather than staged by the shared packager: that script lives at
-# whatever cameraunlock-core commit this mod pins, so its behaviour is frozen
-# until the pointer moves, and a licence obligation cannot wait on a bump.
-Add-ZipEntry -ZipPath $result.GithubZip -SourceFile $coreLicenseSource -EntryName $coreLicenseEntry
-Write-Host "  $coreLicenseEntry" -ForegroundColor Green
+# The shared packager stages licenses/cameraunlock-core-LICENSE.txt itself.
 Assert-ZipCarriesNotices -ZipPath $result.GithubZip -EntryNames $requiredZipEntries
 
 # The Nexus ZIP is built here for the same reason: the shared packager's version
