@@ -48,22 +48,6 @@ if ($Version -eq 'nightly') {
 
 Import-Module (Join-Path $projectDir "cameraunlock-core\powershell\ReleaseWorkflow.psm1") -Force
 
-# Mirrors New-ChangelogFromCommits' insertion so a -Force maintenance entry
-# lands in the same place with the same shape.
-function Add-MaintenanceChangelogEntry {
-    param([string]$Path, [string]$NewVersion)
-    $date = Get-Date -Format 'yyyy-MM-dd'
-    $entry = "## [$NewVersion] - $date`n`n### Changed`n`n- Maintenance release (no user-facing changes).`n`n"
-    $changelog = Get-Content $Path -Raw
-    if ($changelog -match '(?s)(# Changelog.*?)(## \[)') {
-        $changelog = $changelog -replace '(?s)(# Changelog.*?\n\n)', "`$1$entry"
-    } else {
-        $changelog = $changelog -replace '(?s)(# Changelog.*?\n)', "`$1$entry"
-    }
-    $changelog = $changelog.TrimEnd() + "`n"
-    Set-Content $Path $changelog -NoNewline
-}
-
 Write-Host "=== R.E.P.O. Head Tracking Release ===" -ForegroundColor Cyan
 
 $currentVersion = Get-CsprojVersion $csprojPath
@@ -116,25 +100,14 @@ Write-Host "New version: $Version" -ForegroundColor Green
 # instead of stranding a half-applied version bump with no tag.
 $changelogPath = Join-Path $projectDir "CHANGELOG.md"
 Write-Host "Generating CHANGELOG..." -ForegroundColor Cyan
-$hasExistingTags = git tag -l 2>$null
-if (-not $hasExistingTags) {
-    $date = Get-Date -Format 'yyyy-MM-dd'
-    Set-Content $changelogPath "# Changelog`n`n## [$Version] - $date`n`nFirst release.`n"
-    Write-Host "  First release - wrote initial CHANGELOG entry" -ForegroundColor Gray
-} else {
-    try {
-        New-ChangelogFromCommits -ChangelogPath $changelogPath -Version $Version -ArtifactPaths @(
-            "src/REPOHeadTracking/", "cameraunlock-core", "scripts/", "README.md", "CHANGELOG.md", "LICENSE", ".github/"
-        )
-    } catch {
-        if (-not $Force) {
-            Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
-            Write-Host "No user-facing changes to release. Re-run with -Force for a maintenance release." -ForegroundColor Yellow
-            exit 1
-        }
-        Write-Host "No user-facing commits since last tag - writing maintenance entry (-Force)." -ForegroundColor Yellow
-        Add-MaintenanceChangelogEntry -Path $changelogPath -NewVersion $Version
-    }
+try {
+    New-ChangelogFromCommits -ChangelogPath $changelogPath -Version $Version -ArtifactPaths @(
+        "src/REPOHeadTracking/", "cameraunlock-core", "scripts/", "README.md", "CHANGELOG.md", "LICENSE", ".github/"
+    ) -Maintenance:$Force
+} catch {
+    Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "No user-facing changes to release. Re-run with -Force for a maintenance release." -ForegroundColor Yellow
+    exit 1
 }
 
 Set-CsprojVersion $csprojPath $Version
