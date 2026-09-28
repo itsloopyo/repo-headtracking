@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using CameraUnlock.Core.Config;
 using CameraUnlock.Core.Config.Testing;
+using CameraUnlock.Core.Input;
 using REPOHeadTracking.Config;
 using REPOHeadTracking.Legacy;
 using UnityEngine;
@@ -15,7 +16,8 @@ namespace REPOHeadTracking.Tests.ConfigDifferential
     /// Comparison 2: the frozen reader (the import) against the owner's Load, which imports the
     /// legacy file into a new CameraUnlock.ini (the migration), over every input. What may differ
     /// is only what data/config-format.json approves: pose shaping (the sensitivities and
-    /// inversions), the neck pivot, and a hotkey on a Ctrl, Shift or Alt key alone.
+    /// inversions), the neck pivot, a hotkey on a Ctrl, Shift or Alt key alone (N3), and a hotkey
+    /// on a key code Unity names no key for (N1).
     /// </summary>
     public class MigrationTests : IDisposable
     {
@@ -40,7 +42,7 @@ namespace REPOHeadTracking.Tests.ConfigDifferential
         public void ComparisonTwo()
         {
             var failures = new List<string>();
-            int migrated = 0, deferred = 0, created = 0, refused = 0;
+            int migrated = 0, created = 0, refused = 0, unnamed = 0;
             foreach (KeyValuePair<string, byte[]> input in Corpus.Inputs())
             {
                 string where = input.Key + ": ";
@@ -72,41 +74,29 @@ namespace REPOHeadTracking.Tests.ConfigDifferential
                 var poseShaping = new List<PoseShapingValue>();
                 LegacyMigration.Map(import.Values, expected, dropped, poseShaping);
                 CheckRules(failures, where, import, expected, dropped, poseShaping);
+                if (dropped.Any(d => d.Rule == DropRule.KeyCodeOutOfRange)) unnamed++;
 
-                if (Unwritable(expected) != null)
+                Check(failures, where, m.Loaded.Status == ConfigLoadStatus.Migrated, "status " + m.Loaded.Status + ", not Migrated");
+                if (m.Loaded.Status != ConfigLoadStatus.Migrated) continue;
+                Check(failures, where, SameFields(expected, m.Loaded.Config), Difference(expected, m.Loaded.Config));
+                Check(failures, where, Names(m) == REPOConfigOwner.FileName + ", " + BepInExHost.Guid + ".cfg", "the folder holds " + Names(m));
+                foreach (DroppedValue d in dropped)
                 {
-                    // A hotkey the published build read as a KeyCode with no name: no codec
-                    // writes it and no approved rule covers it, so the owner defers the import and
-                    // the session runs on what it read.
-                    Check(failures, where, m.Loaded.Status == ConfigLoadStatus.Deferred, "status " + m.Loaded.Status + ", not Deferred");
-                    Check(failures, where, m.Loaded.Reason.Contains("cannot be converted"), "reason: " + m.Loaded.Reason);
-                    Check(failures, where, Names(m) == BepInExHost.Guid + ".cfg", "the folder holds " + Names(m));
-                    Check(failures, where, SameFields(expected, m.Loaded.Config), "the deferred session does not run on the import");
-                    deferred++;
+                    string line = m.LegacyPath + ": " + d.Describe();
+                    Check(failures, where, m.Loaded.Log.Contains(line), "the log does not name " + d.Describe());
                 }
-                else
-                {
-                    Check(failures, where, m.Loaded.Status == ConfigLoadStatus.Migrated, "status " + m.Loaded.Status + ", not Migrated");
-                    if (m.Loaded.Status != ConfigLoadStatus.Migrated) continue;
-                    Check(failures, where, SameFields(expected, m.Loaded.Config), Difference(expected, m.Loaded.Config));
-                    Check(failures, where, Names(m) == REPOConfigOwner.FileName + ", " + BepInExHost.Guid + ".cfg", "the folder holds " + Names(m));
-                    foreach (DroppedValue d in dropped)
-                    {
-                        string line = m.LegacyPath + ": " + d.Describe();
-                        Check(failures, where, m.Loaded.Log.Contains(line), "the log does not name " + d.Describe());
-                    }
-                    string lint = Lint(File.ReadAllBytes(m.ConfigPath));
-                    Check(failures, where, lint == null, "the migrated file " + lint);
-                    SecondLoad(failures, where, m);
-                    migrated++;
-                }
+                string lint = Lint(File.ReadAllBytes(m.ConfigPath));
+                Check(failures, where, lint == null, "the migrated file " + lint);
+                SecondLoad(failures, where, m);
+                migrated++;
                 LegacyKept(failures, where, m, input.Value);
             }
 
             Assert.True(failures.Count == 0, string.Join("\n", failures.Take(40).ToArray()));
             Assert.True(migrated > 500, migrated + " inputs migrated");
             Assert.True(created == 1, created + " inputs were a first start");
-            Assert.True(refused + deferred < migrated / 5, refused + " refused by BepInEx and " + deferred + " deferred, of " + migrated);
+            Assert.True(refused < migrated / 5, refused + " refused by BepInEx, of " + migrated);
+            Assert.True(unnamed > 0, "no input holds a hotkey on a key code Unity names no key for");
         }
 
         /// <summary>
@@ -316,6 +306,30 @@ namespace REPOHeadTracking.Tests.ConfigDifferential
         }
 
         /// <summary>
+        /// N1: a legacy hotkey on a key code Unity names no key for, which BepInEx reads from a
+        /// number in the .cfg, imports as unbound, logged as KeyCodeOutOfRange, and the player
+        /// keeps the Ctrl+Shift chord ChordHotkeys polled beside it.
+        /// </summary>
+        [Fact]
+        public void AKeyCodeUnityNamesNoKeyForUnbindsAndKeepsTheChord()
+        {
+            byte[] edited = Edit(Corpus.FirstRun("dev"), LegacyConfigReader.Keybindings, "YawModeKey", "999");
+            var dropped = new List<DroppedValue>();
+            LegacyFollowsDefaultsIni follows = MapOf(edited, dropped);
+            Assert.DoesNotContain(ConfigConcepts.YawModeKey, follows.Concepts);
+            DroppedValue unnamed = dropped.Single(d => d.Rule == DropRule.KeyCodeOutOfRange);
+            Assert.Equal(LegacyConfigReader.Keybindings, unnamed.Section);
+            Assert.Equal("YawModeKey", unnamed.Key);
+            Assert.Equal("999", unnamed.Value);
+
+            Migration m = Migration.Run(Path.Combine(scratch, "unnamed"), edited, defaults);
+            Assert.Equal(ConfigLoadStatus.Migrated, m.Loaded.Status);
+            Assert.Equal("Ctrl+Shift+H", m.Loaded.Config.YawModeKeyName);
+            Assert.Equal("Ctrl+Shift+H", FileRows(m.ConfigPath)["[Hotkeys] YawModeKey"]);
+            Assert.Contains(m.LegacyPath + ": " + unnamed.Describe(), m.Loaded.Log);
+        }
+
+        /// <summary>
         /// The tracker pivot is no setting: a TrackerPivotForward the player changed is dropped and
         /// logged, and the mod keeps the 0.08 it shipped.
         /// </summary>
@@ -493,12 +507,16 @@ namespace REPOHeadTracking.Tests.ConfigDifferential
             foreach (KeyValuePair<string, string> action in polled)
             {
                 string bindings = Migration.Polled(action.Value);
-                if (bindings == null) continue;
+                if (bindings == null)
+                {
+                    Check(failures, where, false, action.Key + " is not a key list: " + action.Value);
+                    continue;
+                }
                 string published = import.Hotkeys[action.Key];
                 string key = action.Key == "Toggle" ? "ToggleKey" : action.Key + "Key";
-                if (IsModifier(modifierKeys[key]))
+                if (IsModifier(modifierKeys[key]) || IsUnnamed(modifierKeys[key]))
                 {
-                    // N3: the modifier alone is unbound, the chord kept.
+                    // N3 and N1: the key alone is unbound, the chord kept.
                     published = published.Substring(published.IndexOf(", ", StringComparison.Ordinal) + 2);
                 }
                 Check(failures, where, bindings == published, action.Key + " polls " + bindings + ", the published build " + import.Hotkeys[action.Key]);
@@ -532,6 +550,7 @@ namespace REPOHeadTracking.Tests.ConfigDifferential
             foreach (KeyValuePair<string, KeyCode> hotkey in modifierKeys)
             {
                 if (IsModifier(hotkey.Value)) expectedDropped.Add("ModifierKey [" + LegacyConfigReader.Keybindings + "] " + hotkey.Key);
+                if (IsUnnamed(hotkey.Value)) expectedDropped.Add("KeyCodeOutOfRange [" + LegacyConfigReader.Keybindings + "] " + hotkey.Key);
             }
             var actualDropped = dropped.Select(d => d.Rule + " [" + d.Section + "] " + d.Key).ToList();
             Check(failures, where, expectedDropped.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(actualDropped.OrderBy(x => x, StringComparer.Ordinal)),
@@ -543,6 +562,11 @@ namespace REPOHeadTracking.Tests.ConfigDifferential
             return key >= KeyCode.RightShift && key <= KeyCode.LeftAlt;
         }
 
+        private static bool IsUnnamed(KeyCode key)
+        {
+            return key != KeyCode.None && !KeyBindings.HasName((int)key);
+        }
+
         private static object[] Shaping(string section, string key, float value, float shipped)
         {
             return new object[] { section, key, value == shipped };
@@ -551,16 +575,6 @@ namespace REPOHeadTracking.Tests.ConfigDifferential
         private static object[] Shaping(string section, string key, bool value, bool shipped)
         {
             return new object[] { section, key, value == shipped };
-        }
-
-        // The first hotkey list no codec writes, or null.
-        private static string Unwritable(REPOConfig c)
-        {
-            foreach (string list in new[] { c.ToggleKeyName, c.CycleTrackingModeKeyName, c.YawModeKeyName })
-            {
-                if (Migration.Polled(list) == null) return list;
-            }
-            return null;
         }
 
         private static bool SameFields(REPOConfig a, REPOConfig b)

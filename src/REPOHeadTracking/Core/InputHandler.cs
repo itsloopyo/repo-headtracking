@@ -34,16 +34,15 @@ namespace REPOHeadTracking.Core
                 $"[{config.YawModeKeyName}] Yaw";
         }
 
-        // The table's hotkey codec has read every list of a loaded file. Only a legacy import the
-        // owner deferred, over a key with no name, hands one over that does not parse; that
-        // action then has no keys this session.
+        // The table's hotkey codec has read every list of a loaded file, and the legacy import
+        // writes only key lists, so a list that does not parse is a bug.
         private static KeyBinding[] Parse(string row, string text)
         {
             KeyBinding[] bindings;
             string error;
-            if (KeyBindings.TryParse(text, out bindings, out error)) return bindings;
-            REPOHeadTrackingPlugin.Log.LogError(row + "=" + text + " is not a hotkey list (" + error + "), so it has no keys this session.");
-            return new KeyBinding[0];
+            if (!KeyBindings.TryParse(text, out bindings, out error))
+                throw new InvalidOperationException("[Hotkeys] " + row + "=" + text + ": " + error);
+            return bindings;
         }
 
         public void CheckInput()
